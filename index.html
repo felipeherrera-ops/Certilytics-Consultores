@@ -78,13 +78,14 @@
 <body class="text-slate-800">
 
     <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-slate-900 flex items-center">
-                <i class="fas fa-search mr-3 text-blue-600"></i>
+        <div class="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 flex items-center">
+                <i class="fas fa-search mr-2 sm:mr-3 text-blue-600"></i>
                 Analizador de Causas 5 Porqués
             </h1>
-            <button id="export-button" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center shadow-sm">
-                <i class="fas fa-file-pdf mr-2"></i> Exportar Reporte a PDF
+            <button id="export-button" class="bg-blue-600 text-white px-3 py-2 sm:px-5 sm:py-2 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center shadow-sm text-sm sm:text-base">
+                <i class="fas fa-file-pdf mr-2"></i>
+                <span class="hidden sm:inline">Exportar a PDF</span>
             </button>
         </div>
     </header>
@@ -92,8 +93,8 @@
     <main class="container mx-auto p-4 md:p-8" id="main-content">
         <!-- Motivational Intro -->
         <div class="bg-blue-600 text-white p-6 rounded-xl shadow-lg mb-8 border border-blue-700 text-center">
-            <h2 class="text-3xl font-bold mb-2">De Problemas a Oportunidades de Mejora</h2>
-            <p class="text-blue-100 max-w-3xl mx-auto">Esta no es solo una herramienta, es tu consultor experto integrado. Sigue los pasos para transformar cualquier no conformidad, desde la más simple a la más compleja, en un plan de acción robusto que genera valor real y fortalece tu sistema de gestión.</p>
+            <h2 class="text-2xl sm:text-3xl font-bold mb-2">De Problemas a Oportunidades de Mejora</h2>
+            <p class="text-blue-100 max-w-3xl mx-auto">Esta no es solo una herramienta, es tu consultor experto integrado. Sigue los pasos para transformar cualquier no conformidad en un plan de acción robusto que genera valor real.</p>
         </div>
 
         <!-- Problem Definition -->
@@ -101,19 +102,19 @@
             <div class="flex justify-between items-start">
                 <label for="problem-input" class="block text-xl font-semibold mb-3 text-slate-700">Paso 1: Definición de la No Conformidad</label>
             </div>
-            <p class="text-sm text-slate-500 mb-2">Describa clara y objetivamente la no conformidad detectada, incluyendo evidencia (ej. N° de lote, ID de ticket, fecha, lugar). Una buena definición es el primer paso para un análisis exitoso.</p>
-            <textarea id="problem-input" class="w-full p-3 border border-slate-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Ej: Fuga de datos de cliente (reportada por 3 clientes) el 05/10/2025, afectando la base de datos 'Clientes_PROD'." rows="2"></textarea>
+            <p class="text-sm text-slate-500 mb-2">Describa clara y objetivamente la no conformidad detectada, incluyendo evidencia (ej. N° de lote, ID de ticket, fecha, lugar).</p>
+            <textarea id="problem-input" class="w-full p-3 border border-slate-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Ej: Fuga de datos de cliente (reportada por 3 clientes)..." rows="2"></textarea>
             
             <div class="mt-4 pt-4 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="block text-lg font-semibold mb-2 text-slate-700">Análisis de Impacto y Riesgo</label>
-                     <p class="text-xs text-slate-500 mb-2">Cuantificar el impacto es clave para el pensamiento basado en riesgos. <span class="iso-tag">9001: 6.1</span> <span class="iso-tag">27001: 6.1.2</span> <span class="iso-tag">45001/14001: 6.1.2</span></p>
-                    <input type="text" id="impact-qualitative" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm mb-2" placeholder="Impacto Cualitativo (Ej: Daño reputacional, incumplimiento contractual)">
-                    <input type="text" id="impact-quantitative" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm" placeholder="Impacto Cuantitativo (Ej: Multas potenciales de $10,000, pérdida de horas)">
+                     <p class="text-xs text-slate-500 mb-2">Cuantificar el impacto es clave. <span class="iso-tag">9001: 6.1</span> <span class="iso-tag">27001: 6.1.2</span> <span class="iso-tag">45001/14001: 6.1.2</span></p>
+                    <input type="text" id="impact-qualitative" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm mb-2" placeholder="Impacto Cualitativo (Ej: Daño reputacional)">
+                    <input type="text" id="impact-quantitative" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm" placeholder="Impacto Cuantitativo (Ej: Costo estimado $5,000)">
                 </div>
                  <div>
                     <label class="block text-lg font-semibold mb-2 text-slate-700">Contexto del Análisis</label>
-                    <p class="text-xs text-slate-500 mb-2">Seleccione el contexto para recibir sugerencias de causas más relevantes.</p>
+                    <p class="text-xs text-slate-500 mb-2">Seleccione para recibir sugerencias relevantes.</p>
                     <div class="flex items-center gap-6" id="business-type-selector">
                         <label class="flex items-center cursor-pointer">
                             <input type="radio" name="businessType" value="product" class="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500" checked>
@@ -128,7 +129,7 @@
             </div>
             <div class="mt-4 pt-4 border-t border-slate-200">
                 <label class="block text-lg font-semibold mb-2 text-slate-700">Equipo de Análisis y Solución</label>
-                 <p class="text-xs text-slate-500 mb-2">Definir el equipo asegura la competencia y la rendición de cuentas. <span class="iso-tag">9001: 7.1.2, 7.2</span></p>
+                 <p class="text-xs text-slate-500 mb-2">Asegura la competencia y rendición de cuentas. <span class="iso-tag">9001: 7.1.2, 7.2</span></p>
                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input type="text" id="team-leader" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm" placeholder="Líder del Equipo (Ej: Gerente de Calidad)">
                     <input type="text" id="team-members" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm" placeholder="Miembros (Ej: Jefe de Producción, Ing. de Procesos)">
@@ -148,8 +149,8 @@
             </div>
             <div class="mb-6 pb-6 border-b border-slate-200">
                 <h3 class="font-semibold text-lg text-slate-700 mb-2">Acciones de Contención Inmediata (Corrección)</h3>
-                <p class="text-xs text-slate-500 mb-2">La corrección ataca el síntoma, no la causa. Describe las acciones tomadas para controlar y mitigar el impacto inmediato del problema. <span class="iso-tag">9001: 10.2.1 a)</span></p>
-                <textarea id="containment-actions" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm" placeholder="Ej: Aislar el servidor afectado, revocar credenciales, notificar a los clientes impactados según el plan de respuesta a incidentes (PR-SI-01)." rows="3"></textarea>
+                <p class="text-xs text-slate-500 mb-2">La corrección ataca el síntoma, no la causa. <span class="iso-tag">9001: 10.2.1 a)</span></p>
+                <textarea id="containment-actions" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm" placeholder="Ej: Aislar el servidor afectado, revocar credenciales..." rows="3"></textarea>
                 <div id="containment-suggestions-container" class="mt-2 flex flex-wrap gap-2 text-sm"></div>
             </div>
             <div id="action-items-wrapper" class="space-y-6">
@@ -167,7 +168,7 @@
             <div class="flex justify-between items-start mb-4">
                  <h2 class="text-xl font-bold text-slate-800">Paso 4: Plan de Verificación de Eficacia</h2>
             </div>
-             <p class="text-xs text-slate-500 mb-4">La verificación asegura que las acciones tomadas eliminaron la causa raíz y que no introdujeron nuevos riesgos. Esta es la fase de "Verificar" y "Actuar" del ciclo PDCA. <span class="iso-tag">9001: 10.2.1 e)</span> <span class="iso-tag">ISO 19011</span></p>
+             <p class="text-xs text-slate-500 mb-4">Asegura que las acciones eliminaron la causa raíz y no crearon nuevos riesgos. <span class="iso-tag">9001: 10.2.1 e)</span> <span class="iso-tag">ISO 19011</span></p>
             <div id="verification-items-wrapper" class="space-y-4">
                 <!-- Verification items will be injected here -->
             </div>
