@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador de Causas 5 Porqués</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* slate-100 */
+        }
+        .why-card {
+            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .why-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .connector {
+            width: 2px;
+            background-color: #cbd5e1; /* slate-300 */
+            margin: -1rem auto;
+            height: 2rem;
+        }
+        .final-cause {
+            border-color: #2563eb; /* blue-600 */
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.2);
+        }
+        .suggestion-btn {
+            transition: background-color 0.2s ease;
+        }
+        .iso-tag {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 9999px;
+            background-color: #e0e7ff;
+            color: #4338ca;
+            cursor: help;
+        }
+        #action-plan-container, #verification-plan-container {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 250px;
+            background-color: #334155;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-slate-900 flex items-center">
+                <i class="fas fa-search mr-3 text-blue-600"></i>
+                Analizador de Causas 5 Porqués
+            </h1>
+            <button id="export-button" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center shadow-sm">
+                <i class="fas fa-file-pdf mr-2"></i> Exportar Reporte a PDF
+            </button>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8" id="main-content">
+        <!-- Motivational Intro -->
+        <div class="bg-blue-600 text-white p-6 rounded-xl shadow-lg mb-8 border border-blue-700 text-center">
+            <h2 class="text-3xl font-bold mb-2">De Problemas a Oportunidades de Mejora</h2>
+            <p class="text-blue-100 max-w-3xl mx-auto">Esta no es solo una herramienta, es tu consultor experto integrado. Sigue los pasos para transformar cualquier no conformidad, desde la más simple a la más compleja, en un plan de acción robusto que genera valor real y fortalece tu sistema de gestión.</p>
+        </div>
+
+        <!-- Problem Definition -->
+        <div id="problem-definition" class="bg-white p-6 rounded-xl shadow-lg mb-4 border border-slate-200">
+            <div class="flex justify-between items-start">
+                <label for="problem-input" class="block text-xl font-semibold mb-3 text-slate-700">Paso 1: Definición de la No Conformidad</label>
+            </div>
+            <p class="text-sm text-slate-500 mb-2">Describa clara y objetivamente la no conformidad detectada, incluyendo evidencia (ej. N° de lote, ID de ticket, fecha, lugar). Una buena definición es el primer paso para un análisis exitoso.</p>
+            <textarea id="problem-input" class="w-full p-3 border border-slate-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Ej: Fuga de datos de cliente (reportada por 3 clientes) el 05/10/2025, afectando la base de datos 'Clientes_PROD'." rows="2"></textarea>
+            
+            <div class="mt-4 pt-4 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-lg font-semibold mb-2 text-slate-700">Análisis de Impacto y Riesgo</label>
+                     <p class="text-xs text-slate-500 mb-2">Cuantificar el impacto es clave para el pensamiento basado en riesgos. <span class="iso-tag">9001: 6.1</span> <span class="iso-tag">27001: 6.1.2</span> <span class="iso-tag">45001/14001: 6.1.2</span></p>
+                    <input type="text" id="impact-qualitative" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm mb-2" placeholder="Impacto Cualitativo (Ej: Daño reputacional, incumplimiento contractual)">
+                    <input type="text" id="impact-quantitative" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm" placeholder="Impacto Cuantitativo (Ej: Multas potenciales de $10,000, pérdida de horas)">
+                </div>
+                 <div>
+                    <label class="block text-lg font-semibold mb-2 text-slate-700">Contexto del Análisis</label>
+                    <p class="text-xs text-slate-500 mb-2">Seleccione el contexto para recibir sugerencias de causas más relevantes.</p>
+                    <div class="flex items-center gap-6" id="business-type-selector">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="businessType" value="product" class="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500" checked>
+                            <span class="ml-2 text-slate-800 text-md">Productos</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="businessType" value="service" class="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500">
+                            <span class="ml-2 text-slate-800 text-md">Servicios</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-slate-200">
+                <label class="block text-lg font-semibold mb-2 text-slate-700">Equipo de Análisis y Solución</label>
+                 <p class="text-xs text-slate-500 mb-2">Definir el equipo asegura la competencia y la rendición de cuentas. <span class="iso-tag">9001: 7.1.2, 7.2</span></p>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" id="team-leader" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm" placeholder="Líder del Equipo (Ej: Gerente de Calidad)">
+                    <input type="text" id="team-members" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm" placeholder="Miembros (Ej: Jefe de Producción, Ing. de Procesos)">
+                 </div>
+            </div>
+        </div>
+        
+        <!-- 5 Whys Analysis Container -->
+        <div id="five-whys-container" class="space-y-0">
+            <!-- Why cards will be injected here by JS -->
+        </div>
+
+        <!-- Action Plan Container -->
+        <div id="action-plan-container" class="bg-white p-6 rounded-xl shadow-lg mt-8 border border-slate-200 hidden opacity-0 transform translate-y-5">
+            <div class="flex justify-between items-start mb-4">
+                 <h2 class="text-xl font-bold text-slate-800">Paso 3: Tratamiento de la No Conformidad y Plan de Acciones</h2>
+            </div>
+            <div class="mb-6 pb-6 border-b border-slate-200">
+                <h3 class="font-semibold text-lg text-slate-700 mb-2">Acciones de Contención Inmediata (Corrección)</h3>
+                <p class="text-xs text-slate-500 mb-2">La corrección ataca el síntoma, no la causa. Describe las acciones tomadas para controlar y mitigar el impacto inmediato del problema. <span class="iso-tag">9001: 10.2.1 a)</span></p>
+                <textarea id="containment-actions" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm" placeholder="Ej: Aislar el servidor afectado, revocar credenciales, notificar a los clientes impactados según el plan de respuesta a incidentes (PR-SI-01)." rows="3"></textarea>
+                <div id="containment-suggestions-container" class="mt-2 flex flex-wrap gap-2 text-sm"></div>
+            </div>
+            <div id="action-items-wrapper" class="space-y-6">
+                <!-- Action items will be injected here -->
+            </div>
+            <div class="mt-6">
+                <button id="add-action-btn" class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-200 transition duration-300 text-sm font-semibold">
+                    <i class="fas fa-plus mr-2"></i> Añadir otra acción correctiva
+                </button>
+            </div>
+        </div>
+
+        <!-- Verification Plan Container -->
+        <div id="verification-plan-container" class="bg-white p-6 rounded-xl shadow-lg mt-8 border border-slate-200 hidden opacity-0 transform translate-y-5">
+            <div class="flex justify-between items-start mb-4">
+                 <h2 class="text-xl font-bold text-slate-800">Paso 4: Plan de Verificación de Eficacia</h2>
+            </div>
+             <p class="text-xs text-slate-500 mb-4">La verificación asegura que las acciones tomadas eliminaron la causa raíz y que no introdujeron nuevos riesgos. Esta es la fase de "Verificar" y "Actuar" del ciclo PDCA. <span class="iso-tag">9001: 10.2.1 e)</span> <span class="iso-tag">ISO 19011</span></p>
+            <div id="verification-items-wrapper" class="space-y-4">
+                <!-- Verification items will be injected here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal -->
+    <div id="export-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center p-4 z-[100]">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full transform transition-all scale-95" id="modal-content">
+             <button id="close-modal" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+            <div class="text-center">
+                <i class="fas fa-rocket text-5xl text-blue-600 mb-4"></i>
+                <h3 class="text-2xl font-bold mb-4 text-slate-900">¡Reporte de Acción Correctiva Generado!</h3>
+            </div>
+            <p class="text-slate-600 mb-6 text-center">
+                Has creado un plan de acción robusto y auditable. Si necesitas un experto para implementar una cultura de mejora continua en tu organización, estoy para ayudarte.
+            </p>
+            <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                <h4 class="text-xl font-semibold text-slate-800 mb-3">Servicios de Consultoría Sugeridos:</h4>
+                <ul class="list-disc list-inside text-slate-700 space-y-2">
+                    <li>Facilitación de Talleres de Solución de Problemas (A3, 8D, FMEA)</li>
+                    <li>Optimización de Procesos y Reducción de Costos (Lean Six Sigma)</li>
+                    <li>Implementación y Auditoría de Sistemas de Gestión ISO 9001</li>
+                </ul>
+            </div>
+            <div class="mt-8 text-center">
+                <a href="https://wa.me/573118460138?text=Hola,%20he%20utilizado%20el%20Analizador%20de%20Causas%205%20Porqués%20y%20me%20gustaría%20agendar%20una%20sesión%20estratégica." target="_blank" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition inline-block shadow-lg hover:shadow-xl transform hover:-translate-y-1">Agendar Sesión Estratégica</a>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const problemInput = document.getElementById('problem-input');
+            const container = document.getElementById('five-whys-container');
+            const businessTypeSelector = document.getElementById('business-type-selector');
+            
+            const actionPlanContainer = document.getElementById('action-plan-container');
+            const actionItemsWrapper = document.getElementById('action-items-wrapper');
+            const addActionBtn = document.getElementById('add-action-btn');
+
+            const verificationPlanContainer = document.getElementById('verification-plan-container');
+            const verificationItemsWrapper = document.getElementById('verification-items-wrapper');
+            
+            const containmentSuggestionsContainer = document.getElementById('containment-suggestions-container');
+
+            let whyCount = 0;
+            let actionItemCount = 0;
+
+            const productWhySuggestions = {
+                1: ["El empaque protector se rompió durante el envío.","El producto fue manipulado incorrectamente por el personal.","El vehículo de transporte sufrió vibraciones excesivas."],
+                2: ["El material del empaque no era suficientemente resistente.","El personal no recibió la capacitación adecuada en manejo de productos.","La suspensión del vehículo de transporte estaba desgastada."],
+                3: ["La especificación de compra del material es incorrecta.","No hay un programa de capacitación formal para el personal nuevo.","Se cambió de proveedor a uno de menor calidad para reducir costos."],
+                4: ["El procedimiento de diseño de empaque no se ha actualizado en 5 años.","La gerencia recortó el presupuesto de capacitación.","La decisión de cambiar de proveedor no incluyó una validación de calidad."],
+                5: ["No existe un proceso para la revisión periódica de especificaciones.","La capacitación es vista como un costo y no como una inversión.","No hay una matriz de riesgos para la toma de decisiones de compra."]
+            };
+            
+            const serviceWhySuggestions = {
+                1: ["Los tiempos de respuesta de soporte han aumentado.","Los problemas no se resuelven en el primer contacto.","Hubo un cambio reciente en la plataforma de servicio."],
+                2: ["El equipo de soporte está sobrecargado con tickets.","Los agentes no tienen la información necesaria.","La nueva plataforma es más lenta y compleja de usar."],
+                3: ["Se redujo el personal de soporte en un 10%.","La base de conocimientos interna está desactualizada.","No se proporcionó la capacitación adecuada para la nueva plataforma."],
+                4: ["Hubo un recorte presupuestario en el departamento.","No hay un responsable asignado para mantener la base de conocimientos.","El lanzamiento de la nueva plataforma se apresuró."],
+                5: ["La estrategia se enfocó en reducir costos en lugar de la experiencia del cliente.","La gestión del conocimiento no se considera una función crítica.","La planificación del proyecto no asignó tiempo para la gestión del cambio."]
+            };
+            
+            // --- EXPERT SUGGESTION ENGINE ---
+            const expertSuggestionEngine = {
+                themes: {
+                    'calidad': { 1: ["El control de calidad no detectó el defecto.", "La materia prima era de mala calidad.", "El diseño del producto es propenso a fallas."], 2: ["El procedimiento de inspección es ambiguo.", "El proveedor no está certificado.", "Las pruebas de estrés del producto fueron insuficientes."], 3: ["El personal de calidad carece de formación específica.", "La política de compras prioriza el costo sobre la calidad.", "El proceso de desarrollo no incluye validación de diseño."], 4: ["No hay presupuesto para formación avanzada.", "No se evalúa el riesgo de los nuevos proveedores.", "Los plazos del proyecto eran demasiado ajustados."], 5: ["La dirección no considera la formación como inversión.", "La gestión de proveedores es reactiva, no proactiva.", "La planificación de proyectos no sigue una metodología formal."] },
+                    'entrega': { 1: ["El transportista se retrasó.", "El producto no estaba listo para ser recogido.", "La dirección del cliente era incorrecta."], 2: ["Hubo un cuello de botella en el área de despacho.", "La planificación de la producción fue inexacta.", "El sistema CRM tenía datos desactualizados."], 3: ["Falta de personal en el almacén en horas pico.", "El pronóstico de la demanda no consideró la estacionalidad.", "No hay un proceso de validación de datos de clientes."], 4: ["El proceso de contratación es demasiado lento.", "No se utilizan herramientas de software para la previsión.", "El personal de ventas no está capacitado en la toma de datos."], 5: ["La planificación de recursos humanos no está alineada con la demanda.", "Falta de inversión en tecnología para la cadena de suministro.", "No existe una cultura de propiedad del dato."] },
+                    'seguridad': { 1: ["Se explotó una vulnerabilidad en el software.", "Un empleado compartió credenciales indebidamente.", "El firewall de la red falló."], 2: ["El parche de seguridad no fue aplicado a tiempo.", "El empleado no conocía la política de seguridad.", "La configuración del firewall era incorrecta."], 3: ["El proceso de gestión de parches es manual y lento.", "La formación en ciberseguridad es anual y genérica.", "No hay un responsable de revisar las reglas del firewall."], 4: ["Falta de automatización en la gestión de vulnerabilidades.", "La cultura de seguridad no está arraigada en la empresa.", "El personal de TI está sobrecargado."], 5: ["La alta dirección no ha asignado presupuesto para herramientas de ciberseguridad.", "La seguridad de la información no es un objetivo estratégico.", "La planificación de recursos para TI es deficiente."] },
+                    'soporte': { 1: ["El agente no tenía la respuesta.", "El sistema de tickets era lento.", "Había demasiadas llamadas en espera."], 2: ["La base de conocimientos interna está desactualizada.", "La infraestructura del sistema no soporta la carga actual.", "El equipo de soporte está sobrecargado con tickets."], 3: ["No hay un responsable asignado para mantener la base de conocimientos.", "No se realizó un análisis de capacidad del sistema.", "Se redujo el personal de soporte en un 10%."], 4: ["La gestión del conocimiento no se considera una función crítica.", "La planificación de TI no está alineada con el crecimiento del negocio.", "Hubo un recorte presupuestario en el departamento."], 5: ["La estrategia se enfocó en reducir costos en lugar de la experiencia del cliente.", "Falta de planificación estratégica de TI.", "Decisión financiera sin análisis de riesgo operativo."] },
+                    'humano': { 1: ["El turno de trabajo es excesivamente largo o sin pausas.", "El operario no está debidamente capacitado para la tarea.", "Las condiciones ambientales son inadecuadas (poca luz, mucho calor)."], 2: ["La política de turnos no ha sido revisada.", "El programa de inducción es deficiente o inexistente.", "No se realizan inspecciones de seguridad y salud en el trabajo."], 3: ["Se priorizó la producción continua sobre el bienestar del personal.", "No hay presupuesto asignado para la capacitación técnica.", "Los reportes de condiciones inseguras no son atendidos."], 4: ["La cultura organizacional no promueve el balance vida-trabajo.", "La alta dirección no ve la capacitación como una inversión.", "La gerencia no está comprometida con el sistema de SST."], 5: ["No se miden los indicadores de clima laboral.", "El plan estratégico no incluye objetivos de desarrollo de personal.", "El liderazgo no rinde cuentas por la seguridad y salud."] }
+                },
+                containment: {
+                    'calidad': ["Segregar y poner en cuarentena el lote afectado.", "Notificar al departamento de calidad.", "Detener la línea de producción hasta nuevo aviso."],
+                    'entrega': ["Contactar al cliente para notificar el retraso.", "Buscar una ruta de transporte alternativa.", "Revisar el estado de todos los pedidos pendientes."],
+                    'seguridad': ["Aislar el sistema afectado de la red.", "Forzar el cambio de contraseñas de los usuarios impactados.", "Iniciar el plan de respuesta a incidentes de seguridad."],
+                    'soporte': ["Asignar un equipo de respuesta prioritaria al problema.", "Comunicar a los clientes sobre la degradación del servicio.", "Escalar el problema al nivel 2 de soporte."],
+                    'humano': ["Retirar al operario del puesto de trabajo.", "Realizar una charla de seguridad inmediata.", "Revisar los registros de turnos y horas extras del personal."]
+                },
+                keywords: { 'calidad': ['calidad', 'defecto', 'falla', 'roto', 'dañado'], 'entrega': ['entrega', 'retraso', 'demora', 'logística', 'transporte'], 'seguridad': ['seguridad', 'fuga', 'datos', 'acceso', 'vulnerabilidad', 'firewall'], 'soporte': ['soporte', 'ticket', 'respuesta', 'cliente', 'agente'], 'humano': ['operario', 'personal', 'empleado', 'dormido', 'fatiga', 'error humano'] },
+                defaults: { product: productWhySuggestions, service: serviceWhySuggestions },
+
+                getTheme(text) {
+                    const lowerText = text.toLowerCase();
+                    for (const theme in this.keywords) {
+                        for (const keyword of this.keywords[theme]) {
+                            if (lowerText.includes(keyword)) {
+                                return theme;
+                            }
+                        }
+                    }
+                    return null;
+                },
+
+                getSuggestions(level, text) {
+                    const theme = this.getTheme(text);
+                    if (theme && this.themes[theme] && this.themes[theme][level]) {
+                        return this.themes[theme][level];
+                    }
+                    const businessType = document.querySelector('input[name="businessType"]:checked').value;
+                    return this.defaults[businessType][level] || [];
+                },
+                getContainmentSuggestions(text) {
+                    const theme = this.getTheme(text);
+                    if (theme && this.containment[theme]) {
+                        return this.containment[theme];
+                    }
+                    return [];
+                }
+            };
+            
+            const aiSuggestions = {
+                process: "Sugerencia IA: La causa raíz es un fallo de proceso. Para una solución robusta, considere estandarizar este procedimiento (ISO 9001: 7.5) e implementar un control visual o Poka-Yoke para prevenir errores.",
+                training: "Sugerencia IA: La causa raíz es una brecha de competencia. Refuerce el programa de capacitación (ISO 9001: 7.2) y evalúe la eficacia de la formación para asegurar la comprensión.",
+                decision: "Sugerencia IA: La causa raíz es una decisión estratégica. Se recomienda revisar la matriz de riesgos (ISO 9001: 6.1) utilizada para esta decisión y asegurar que la calidad sea un factor ponderado adecuadamente.",
+                default: "Sugerencia IA: Esta contramedida es correctiva. Para que sea preventiva, evalúe si un cambio en el sistema (ej. una auditoría periódica, una lista de verificación) podría haber alertado de este problema antes."
+            };
+
+            function getAISuggestion(text) {
+                if (!text) return aiSuggestions.default;
+                text = text.toLowerCase();
+                if (text.includes('proceso') || text.includes('procedimiento') || text.includes('revisión')) return aiSuggestions.process;
+                if (text.includes('capacitación') || text.includes('formación') || text.includes('conocimiento')) return aiSuggestions.training;
+                if (text.includes('decisión') || text.includes('presupuesto') || text.includes('estrategia') || text.includes('riesgos')) return aiSuggestions.decision;
+                return aiSuggestions.default;
+            }
+
+            function updateRootCauseSummary() {
+                const summaryContainer = document.getElementById('root-cause-summary');
+                if (!summaryContainer) return;
+
+                const whys = Array.from({ length: 5 }, (_, i) => {
+                    const input = container.querySelector(`[data-level="${i + 1}"] .why-input`);
+                    return input ? input.value : '';
+                });
+
+                const rootCause = whys[4];
+                if (!rootCause) {
+                    summaryContainer.innerHTML = `<p class="text-sm italic">Completa el 5to porqué para generar la conclusión del análisis.</p>`;
+                    document.getElementById('ai-analysis-container').classList.add('hidden');
+                    return;
+                }
+                
+                document.getElementById('ai-analysis-container').classList.remove('hidden');
+                const aiSuggestionText = getAISuggestion(rootCause);
+                document.getElementById('ai-suggestion').textContent = aiSuggestionText;
+
+                const conclusion = `El análisis revela que el problema de <strong>"${problemInput.value}"</strong> se originó porque <em>${whys[0] || '...'}</em>. Esto ocurrió debido a que <em>${whys[1] || '...'}</em>, lo que a su vez fue causado por <em>${whys[2] || '...'}</em>. La investigación más profunda muestra que <em>${whys[3] || '...'}</em>, destapando finalmente la causa raíz fundamental del proceso:`;
+
+                summaryContainer.innerHTML = `
+                    <p class="text-sm mb-2">${conclusion}</p>
+                    <p class="text-md font-semibold text-blue-900 bg-blue-200 p-3 rounded">${rootCause}</p>
+                `;
+            }
+
+            function createWhyCard(level) {
+                const isFinal = level === 5;
+                const card = document.createElement('div');
+                card.className = `why-card bg-white p-6 rounded-xl shadow-lg border border-slate-200 ${isFinal ? 'final-cause' : ''}`;
+                card.dataset.level = level;
+
+                let questionContext = problemInput.value;
+                if (level > 1) {
+                    const prevWhyInput = container.querySelector(`[data-level="${level - 1}"] .why-input`);
+                    questionContext = prevWhyInput ? prevWhyInput.value : 'lo anterior';
+                }
+                
+                card.innerHTML = `
+                    ${level > 1 ? '<div class="connector"></div>' : ''}
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-blue-100 rounded-full">
+                            <span class="text-2xl font-bold text-blue-700">${level}</span>
+                        </div>
+                        <div class="flex-1">
+                             <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3">
+                                <p class="text-slate-600">${level === 1 ? 'Paso 2: Análisis de Causa Raíz. El problema es:' : 'La causa anterior fue:'} <strong class="text-slate-800">"${questionContext}"</strong></p>
+                            </div>
+                            <label class="block font-semibold text-lg text-slate-700">${level}. ¿Por qué ocurrió esto?</label>
+                            <input type="text" class="why-input w-full p-2 border border-slate-300 rounded mt-1 focus:ring-2 focus:ring-blue-500" placeholder="Escribe la causa directa aquí...">
+                            <div class="suggestions-container mt-2 flex flex-wrap gap-2 text-sm"></div>
+                        </div>
+                    </div>
+                `;
+
+                if (isFinal) {
+                    const rootCauseBanner = document.createElement('div');
+                    rootCauseBanner.className = 'mt-4 pt-4 border-t border-slate-200';
+                    rootCauseBanner.innerHTML = `
+                        <div class="p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-800 rounded-r-lg">
+                            <p class="font-bold text-lg mb-2"><i class="fas fa-key mr-2"></i>Conclusión del Análisis de Causa Raíz</p>
+                            <div id="root-cause-summary">
+                                <p class="text-sm italic">Completa el 5to porqué para generar la conclusión del análisis.</p>
+                            </div>
+                            <div id="ai-analysis-container" class="hidden mt-4 pt-4 border-t border-blue-200">
+                                <p class="font-bold text-md mb-2 text-slate-800"><i class="fas fa-robot mr-2"></i>Análisis de Solución Asistido por IA</p>
+                                <div class="bg-white/60 p-3 rounded">
+                                    <p id="ai-suggestion" class="text-sm text-slate-900"></p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    card.appendChild(rootCauseBanner);
+                }
+                
+                const suggestions = expertSuggestionEngine.getSuggestions(level, questionContext);
+                const suggestionsContainer = card.querySelector('.suggestions-container');
+                
+                suggestions.forEach(suggestionText => {
+                    const button = document.createElement('button');
+                    button.className = 'suggestion-btn bg-slate-200 text-slate-700 px-3 py-1 rounded-full hover:bg-blue-100 hover:text-blue-800 transition';
+                    button.textContent = suggestionText;
+                    button.onclick = () => {
+                        const inputField = card.querySelector('.why-input');
+                        inputField.value = suggestionText;
+                        inputField.dispatchEvent(new Event('input', { bubbles: true }));
+                    };
+                    suggestionsContainer.appendChild(button);
+                });
+
+                container.appendChild(card);
+                setTimeout(() => card.classList.add('visible'), 10);
+                
+                card.querySelector('.why-input').addEventListener('input', (e) => {
+                    const currentLevel = parseInt(card.dataset.level);
+                    if (e.target.value && currentLevel < 5 && !container.querySelector(`[data-level="${currentLevel + 1}"]`)) {
+                        createWhyCard(currentLevel + 1);
+                    }
+                    if(isFinal) {
+                       updateRootCauseSummary();
+                    }
+                });
+
+                if(isFinal){
+                    showActionAndVerificationPlans();
+                }
+            }
+            
+            function addActionItem(){
+                actionItemCount++;
+                const actionItemId = `action-item-${actionItemCount}`;
+                const actionItem = document.createElement('div');
+                actionItem.id = actionItemId;
+                actionItem.className = 'action-item pt-6 border-t border-slate-200';
+                actionItem.innerHTML = `
+                    <h3 class="font-semibold text-lg text-slate-700 mb-4">Acción Correctiva para la Causa Raíz #${actionItemCount}</h3>
+                    <div class="space-y-4 bg-slate-50 p-4 rounded-lg">
+                        <div class="pb-4 border-b border-slate-200">
+                             <h4 class="font-semibold text-md text-slate-600 mb-3">La Acción</h4>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block font-semibold text-sm text-slate-600 mb-1">Descripción de la Acción (Contramedida)</label>
+                                    <input type="text" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm action-description" placeholder="Acción para prevenir la recurrencia">
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-sm text-slate-600 mb-1 tooltip">Tipo de Control (Jerarquía) <i class="fas fa-info-circle text-blue-500"></i><span class="tooltiptext">Desde el más eficaz (Eliminación) al menos eficaz (Administrativo). Guía para SST y Ambiental.</span></label>
+                                    <select class="w-full p-2 border border-slate-300 rounded mt-1 text-sm bg-white">
+                                        <option>Eliminación</option>
+                                        <option>Sustitución</option>
+                                        <option>Control de Ingeniería</option>
+                                        <option selected>Control Administrativo (Procedimiento, Política)</option>
+                                        <option>Formación / Concienciación</option>
+                                    </select>
+                                </div>
+                             </div>
+                              <div>
+                                <label class="block font-semibold text-sm text-slate-600 mb-1 mt-3">Recursos Necesarios <span class="iso-tag ml-1">9001: 7.1</span></label>
+                                <input type="text" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm" placeholder="Ej: Presupuesto, personal, herramientas...">
+                            </div>
+                        </div>
+
+                        <div class="pb-4 border-b border-slate-200">
+                            <h4 class="font-semibold text-md text-slate-600 mb-3">Implementación</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block font-semibold text-sm text-slate-600 mb-1"><i class="fas fa-user mr-2 text-slate-500"></i>Responsable de Implementación</label>
+                                    <input type="text" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm" placeholder="Nombre del encargado">
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-sm text-slate-600 mb-1"><i class="fas fa-calendar-alt mr-2 text-slate-500"></i>Fecha Límite de Implementación</label>
+                                    <input type="date" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                             <h4 class="font-semibold text-md text-slate-600 mb-3">Impacto Sistémico</h4>
+                             <div>
+                                 <label class="block font-semibold text-sm text-slate-600 mb-2">Impacto en otros Sistemas de Gestión:</label>
+                                 <div class="flex flex-wrap gap-4 text-sm">
+                                    <label class="flex items-center"><input type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded mr-2" checked disabled><span>Calidad (9001)</span></label>
+                                    <label class="flex items-center"><input type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded mr-2"><span>Seg. Información (27001)</span></label>
+                                    <label class="flex items-center"><input type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded mr-2"><span>Ambiental (14001)</span></label>
+                                    <label class="flex items-center"><input type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded mr-2"><span>SST (45001)</span></label>
+                                 </div>
+                             </div>
+                             <div>
+                                <label class="block font-semibold text-sm text-slate-600 mb-1 mt-3">Riesgos Residuales de la Acción</label>
+                                <input type="text" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm" placeholder="Ej: La nueva política podría ralentizar otro proceso...">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                actionItemsWrapper.appendChild(actionItem);
+
+                // Add corresponding verification item
+                const verificationItem = document.createElement('div');
+                const verificationItemId = `verification-item-${actionItemCount}`;
+                verificationItem.id = verificationItemId;
+                verificationItem.className = 'verification-item bg-slate-50 p-4 rounded-lg border';
+                verificationItem.innerHTML = `
+                    <h4 class="font-semibold text-md text-slate-700 mb-3">Verificación para Acción #${actionItemCount}: <span class="font-normal italic text-slate-600" id="verification-title-${actionItemCount}"></span></h4>
+                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="md:col-span-1">
+                            <label class="block font-semibold text-sm text-slate-600 mb-1"><i class="fas fa-user-check mr-2 text-slate-500"></i>Responsable de Verificación</label>
+                            <input type="text" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm" placeholder="Nombre del auditor/gerente">
+                        </div>
+                        <div class="md:col-span-1">
+                             <label class="block font-semibold text-sm text-slate-600 mb-1"><i class="fas fa-calendar-check mr-2 text-slate-500"></i>Fecha Límite de Verificación</label>
+                            <input type="date" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm">
+                        </div>
+                         <div class="md:col-span-1">
+                            <label class="block font-semibold text-sm text-slate-600 mb-1"><i class="fas fa-tasks mr-2 text-slate-500"></i>Estado</label>
+                             <select class="w-full p-2 border border-slate-300 rounded mt-1 text-sm bg-white">
+                                <option>Pendiente de Verificación</option>
+                                <option>Eficaz</option>
+                                <option>No Eficaz</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-sm text-slate-600 mb-1 mt-3"><i class="fas fa-clipboard-check mr-2 text-slate-500"></i>Evidencia Objetiva de Verificación</label>
+                        <input type="text" class="w-full p-2 border border-slate-300 rounded mt-1 text-sm" placeholder="Ej: KPI reducido en 30%, registro de capacitación, reporte de auditoría...">
+                    </div>
+                `;
+                verificationItemsWrapper.appendChild(verificationItem);
+
+                // Add event listener for traceability
+                const actionDescriptionInput = actionItem.querySelector('.action-description');
+                const verificationTitleSpan = verificationItem.querySelector(`#verification-title-${actionItemCount}`);
+                actionDescriptionInput.addEventListener('input', () => {
+                    verificationTitleSpan.textContent = actionDescriptionInput.value || '';
+                });
+            }
+
+            function populateContainmentSuggestions() {
+                containmentSuggestionsContainer.innerHTML = '';
+                const suggestions = expertSuggestionEngine.getContainmentSuggestions(problemInput.value);
+                const containmentTextarea = document.getElementById('containment-actions');
+
+                suggestions.forEach(suggestionText => {
+                    const button = document.createElement('button');
+                    button.className = 'suggestion-btn bg-slate-200 text-slate-700 px-3 py-1 rounded-full hover:bg-blue-100 hover:text-blue-800 transition';
+                    button.textContent = suggestionText;
+                    button.onclick = () => {
+                        containmentTextarea.value += (containmentTextarea.value ? '\n' : '') + suggestionText;
+                    };
+                    containmentSuggestionsContainer.appendChild(button);
+                });
+            }
+
+            function showActionAndVerificationPlans() {
+                actionPlanContainer.classList.remove('hidden');
+                verificationPlanContainer.classList.remove('hidden');
+                setTimeout(() => {
+                    actionPlanContainer.classList.remove('opacity-0', 'translate-y-5');
+                    verificationPlanContainer.classList.remove('opacity-0', 'translate-y-5');
+                }, 10);
+                if (actionItemCount === 0) {
+                   addActionItem();
+                }
+                populateContainmentSuggestions();
+            }
+            
+            function startAnalysis() {
+                container.innerHTML = '';
+                actionItemsWrapper.innerHTML = '';
+                verificationItemsWrapper.innerHTML = '';
+                actionPlanContainer.classList.add('hidden', 'opacity-0', 'translate-y-5');
+                verificationPlanContainer.classList.add('hidden', 'opacity-0', 'translate-y-5');
+                whyCount = 0;
+                actionItemCount = 0;
+                if (problemInput.value) {
+                    whyCount = 1;
+                    createWhyCard(1);
+                }
+            }
+            
+            problemInput.addEventListener('input', startAnalysis);
+            businessTypeSelector.addEventListener('change', startAnalysis);
+            addActionBtn.addEventListener('click', addActionItem);
+
+
+            container.addEventListener('input', (e) => {
+                if (e.target.classList.contains('why-input')) {
+                    if (container.querySelector('[data-level="5"]')) {
+                        updateRootCauseSummary();
+                    }
+                }
+            });
+
+            // --- Modal Logic & PDF Export ---
+            const modal = document.getElementById('export-modal');
+            const closeModalBtn = document.getElementById('close-modal');
+            const exportBtn = document.getElementById('export-button');
+
+            exportBtn.addEventListener('click', () => {
+                const { jsPDF } = window.jspdf;
+                const elementToExport = document.getElementById('main-content');
+
+                if (!problemInput.value) {
+                    alert("Por favor, define el problema antes de exportar.");
+                    return;
+                }
+                
+                exportBtn.disabled = true;
+                exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generando...';
+
+                html2canvas(elementToExport, { 
+                    scale: 2, // Higher scale for better quality
+                    backgroundColor: '#f1f5f9',
+                    windowWidth: 1200, // Force a wider canvas for better layout
+                    onclone: (document) => {
+                        document.querySelectorAll('input[name="businessType"]').forEach(radio => {
+                           if(radio.checked) {
+                               const p = document.createElement('p');
+                               p.className = 'text-md font-semibold text-slate-700';
+                               p.textContent = `Tipo de Negocio: ${radio.value === 'product' ? 'Productos' : 'Servicios'}`;
+                               const parent = radio.closest('#business-type-selector').parentNode;
+                               parent.innerHTML = '';
+                               parent.appendChild(p);
+                           }
+                        });
+                        document.querySelectorAll('input, textarea, select').forEach(el => {
+                            if (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && el.type !== 'radio' && el.type !== 'checkbox')) {
+                               const p = document.createElement('p');
+                               p.className = 'p-2 bg-slate-50 border rounded min-h-[40px] text-sm';
+                               p.textContent = el.value || 'N/A';
+                               if(el.id === 'problem-input' || el.id.includes('impact-') || el.id.includes('team-')) {
+                                   p.className = 'p-2 text-md font-semibold text-slate-700';
+                                   if(el.id === 'problem-input') p.className = 'p-4 text-xl font-semibold text-slate-700';
+                               }
+                               el.parentNode.replaceChild(p, el);
+                            } else if (el.tagName === 'SELECT') {
+                                const p = document.createElement('p');
+                                p.className = 'p-2 bg-slate-50 border rounded min-h-[40px] text-sm';
+                                p.textContent = el.options[el.selectedIndex].text;
+                                el.parentNode.replaceChild(p, el);
+                            } else if (el.type === 'checkbox') {
+                                const labelSpan = el.nextElementSibling;
+                                if (labelSpan) {
+                                    if (el.checked) {
+                                        labelSpan.style.fontWeight = '600';
+                                    } else {
+                                        labelSpan.style.opacity = '0.5';
+                                    }
+                                }
+                                el.style.display = 'none';
+                            }
+                        });
+                        const summaryClone = document.getElementById('root-cause-summary');
+                        if (summaryClone) summaryClone.style.display = 'block';
+                    }
+                }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'pt',
+                        format: 'a4'
+                    });
+
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
+                    const canvasWidth = canvas.width;
+                    const canvasHeight = canvas.height;
+                    
+                    const ratio = canvasWidth / canvasHeight;
+                    const imgWidth = pdfWidth - 40; // With margin
+                    const imgHeight = imgWidth / ratio;
+                    
+                    let heightLeft = imgHeight;
+                    let position = 20; // Top margin
+
+                    pdf.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+                    heightLeft -= (pdfHeight - 40);
+
+                    while (heightLeft > 0) {
+                        position = heightLeft - imgHeight + 20; // Recalculate position
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+                        heightLeft -= (pdfHeight - 40);
+                    }
+                    
+                    pdf.save(`Reporte_Accion_Correctiva_${new Date().toISOString().slice(0,10)}.pdf`);
+                    
+                    exportBtn.disabled = false;
+                    exportBtn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i> Exportar Reporte a PDF';
+
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                    setTimeout(() => document.getElementById('modal-content').classList.remove('scale-95'), 10);
+
+                }).catch(err => {
+                    console.error('Error al exportar:', err);
+                    alert('Hubo un error al generar el PDF.');
+                    exportBtn.disabled = false;
+                    exportBtn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i> Exportar Reporte a PDF';
+                });
+            });
+
+            closeModalBtn.addEventListener('click', () => {
+                document.getElementById('modal-content').classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 200);
+            });
+        });
+    </script>
+</body>
+</html>
+
